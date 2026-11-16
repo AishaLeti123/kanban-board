@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #000;
+  color: #fff;
+}
+
+/* ===== КОСМИЧЕСКИЙ ФОН С ПАРАЛЛАКСОМ ===== */
+.cosmos-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  transition: transform 0.3s ease-out;
+}
+
+.nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.4;
+  animation: nebulaPulse 15s infinite ease-in-out;
+  transition: transform 0.3s ease-out;
+}
+
+.nebula-1 { width: 600px; height: 600px; background: radial-gradient(circle, #6a0dad 0%, transparent 70%); top: -200px; left: -100px; }
+.nebula-2 { width: 500px; height: 500px; background: radial-gradient(circle, #1e3a8a 0%, transparent 70%); bottom: -150px; right: -100px; animation-delay: -7s; }
+.nebula-3 { width: 400px; height: 400px; background: radial-gradient(circle, #831843 0%, transparent 70%); top: 40%; left: 50%; animation-delay: -3s; opacity: 0.25; }
+
+@keyframes nebulaPulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+.star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle var(--duration) infinite ease-in-out;
+  animation-delay: var(--delay);
+  transition: transform 0.3s ease-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.shooting-star {
+  position: absolute;
+  width: 120px; height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transform: rotate(-45deg);
+  animation: shoot 3s linear infinite;
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.5);
+}
+
+.shooting-star::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(200, 220, 255, 0.9) 50%, rgba(255,255,255,0) 100%);
+  filter: blur(1px);
+}
+
+.shooting-star:nth-child(1) { top: 10%; left: -150px; animation-delay: 0s; animation-duration: 2.5s; }
+.shooting-star:nth-child(2) { top: 30%; left: -150px; animation-delay: 4s; animation-duration: 3s; }
+.shooting-star:nth-child(3) { top: 55%; left: -150px; animation-delay: 8s; animation-duration: 2.8s; }
+.shooting-star:nth-child(4) { top: 75%; left: -150px; animation-delay: 12s; animation-duration: 3.2s; }
+.shooting-star:nth-child(5) { top: 20%; left: -150px; animation-delay: 16s; animation-duration: 2.7s; }
+
+@keyframes shoot {
+  0% { transform: translate(0, 0) rotate(-45deg); opacity: 0; }
+  5% { opacity: 1; }
+  15% { transform: translate(calc(100vw + 200px), calc(100vh + 200px)) rotate(-45deg); opacity: 0; }
+  100% { transform: translate(calc(100vw + 200px), calc(100vh + 200px)) rotate(-45deg); opacity: 0; }
+}
+
+/* ===== ШАПКА ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: rgba(10, 15, 30, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo { display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 700; }
+.logo-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, #ff006e, #8338ec);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(255, 0, 110, 0.4);
+}
+
+nav { display: flex; gap: 8px; }
+
+.nav-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.nav-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.nav-btn.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+.user-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3a86ff, #8338ec);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.user-avatar:hover { transform: scale(1.1); }
+
+/* ===== ОСНОВНОЙ КОНТЕНТ ===== */
+.container { padding: 40px; max-width: 1600px; margin: 0 auto; padding-bottom: 80px; }
+
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+
+.page-title {
+  font-size: 48px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.page-subtitle { color: rgba(255, 255, 255, 0.6); font-size: 16px; }
+
+/* ===== КНОПКИ ===== */
+.btn-primary {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #ff006e, #8338ec);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(131, 56, 236, 0.4);
+  font-family: inherit;
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(131, 56, 236, 0.6); }
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.2); }
+
+.btn-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s;
+  font-size: 18px;
+}
+
+.btn-icon:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+.btn-icon.danger:hover { background: rgba(255, 0, 110, 0.3); }
+
+/* ===== СЕТКА ДОСОК ===== */
+.boards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+
+.board-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.board-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff006e, #8338ec, #3a86ff);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.board-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.board-card:hover::before { opacity: 1; }
+
+.board-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.board-card p { color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-bottom: 16px; min-height: 40px; }
+
+.board-meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+.board-stats { display: flex; gap: 12px; }
+.stat { display: flex; align-items: center; gap: 4px; }
+
+.add-board-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 280px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+.add-board-card:hover { border-color: rgba(131, 56, 236, 0.5); background: rgba(131, 56, 236, 0.05); color: #fff; }
+
+/* ===== СТРАНИЦА ДОСКИ ===== */
+.board-view { display: none; }
+.board-view.active { display: block; }
+.boards-view.active { display: block; }
+.boards-view { display: block; }
+
+.board-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-wrap: wrap; gap: 15px; }
+
+.board-title-input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  max-width: 500px;
+}
+
+.board-title-input:focus { border-bottom: 2px solid #8338ec; }
+
+.columns-container { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; min-height: 600px; }
+
+.column {
+  min-width: 320px; max-width: 320px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 200px);
+}
+
+.column-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+
+.column-title {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  flex: 1;
+}
+
+.column-title:focus { border-bottom: 2px solid #8338ec; }
+
+.cards-count { background: rgba(131, 56, 236, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 8px; }
+
+.cards-list { flex: 1; overflow-y: auto; min-height: 100px; padding: 4px; }
+.cards-list.drag-over { background: rgba(131, 56, 236, 0.1); border-radius: 8px; }
+
+/* ===== КАРТОЧКА С АНИМАЦИЕЙ ПОЯВЛЕНИЯ ===== */
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: grab;
+  transition: all 0.3s;
+  position: relative;
+  animation: cardAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cardAppear {
+  0% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card.dragging { opacity: 0.5; cursor: grabbing; }
+
+.card-image { width: 100%; height: 120px; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; word-break: break-word; }
+.card-description { font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-bottom: 10px; word-break: break-word; }
+
+/* ===== МЕТКИ/ТЕГИ ===== */
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+
+.tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tag-bug { background: rgba(255, 59, 48, 0.3); color: #ff6b6b; border: 1px solid rgba(255, 59, 48, 0.5); }
+.tag-feature { background: rgba(52, 199, 89, 0.3); color: #6bffb8; border: 1px solid rgba(52, 199, 89, 0.5); }
+.tag-improvement { background: rgba(255, 204, 0, 0.3); color: #ffd966; border: 1px solid rgba(255, 204, 0, 0.5); }
+.tag-design { background: rgba(175, 82, 222, 0.3); color: #d4a5ff; border: 1px solid rgba(175, 82, 222, 0.5); }
+.tag-urgent { background: rgba(255, 0, 110, 0.3); color: #ff6b9d; border: 1px solid rgba(255, 0, 110, 0.5); }
+
+.card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+
+.card-deadline { display: flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(255, 0, 110, 0.2); border-radius: 6px; color: #ff6b9d; }
+.card-deadline.overdue { background: rgba(255, 0, 0, 0.3); color: #ff6b6b; }
+
+.card-attachments { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+
+.attachment {
+  padding: 3px 8px;
+  background: rgba(58, 134, 255, 0.2);
+  border: 1px solid rgba(58, 134, 255, 0.4);
+  border-radius: 6px;
+  font-size: 11px;
+  color: #60a5fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment:hover { background: rgba(58, 134, 255, 0.3); }
+
+.add-card-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.add-card-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(131, 56, 236, 0.5); }
+
+.add-column-btn {
+  min-width: 320px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.add-column-btn:hover { border-color: rgba(131, 56, 236, 0.5); background: rgba(131, 56, 236, 0.05); color: #fff; }
+
+/* ===== МОДАЛЬНЫЕ ОКНА ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+.modal-overlay.active { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: linear-gradient(135deg, #1a1f4e 0%, #2d1b69 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal h2 { margin-bottom: 24px; font-size: 24px; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500; }
+
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-group input:focus, .form-group textarea:focus { border-color: #8338ec; background: rgba(255, 255, 255, 0.12); }
+
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+
+/* ===== ВЫБОР МЕТOK ===== */
+.tags-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.tag-option {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tag-option.selected { border-color: #fff; transform: scale(1.05); }
+
+.tag-option-bug { background: rgba(255, 59, 48, 0.3); color: #ff6b6b; }
+.tag-option-feature { background: rgba(52, 199, 89, 0.3); color: #6bffb8; }
+.tag-option-improvement { background: rgba(255, 204, 0, 0.3); color: #ffd966; }
+.tag-option-design { background: rgba(175, 82, 222, 0.3); color: #d4a5ff; }
+.tag-option-urgent { background: rgba(255, 0, 110, 0.3); color: #ff6b9d; }
+
+/* ===== ШАБЛОНЫ ДОСОК ===== */
+.templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+
+.template-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.template-card:hover { border-color: rgba(131, 56, 236, 0.5); background: rgba(131, 56, 236, 0.1); transform: translateY(-3px); }
+.template-card.selected { border-color: #8338ec; background: rgba(131, 56, 236, 0.2); }
+
+.template-icon { font-size: 32px; margin-bottom: 8px; }
+.template-name { font-weight: 600; font-size: 14px; }
+.template-desc { font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 4px; }
+
+/* ===== КАЛЕНДАРЬ ===== */
+.calendar-view { display: none; }
+.calendar-view.active { display: block; }
+
+.calendar { background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px; }
+
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.calendar-title { font-size: 24px; font-weight: 700; }
+
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+
+.calendar-day-header { text-align: center; padding: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.5); font-size: 13px; }
+
+.calendar-day {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-day:hover { background: rgba(255, 255, 255, 0.1); }
+.calendar-day.other-month { opacity: 0.3; }
+.calendar-day.today { background: rgba(131, 56, 236, 0.3); border: 1px solid #8338ec; }
+
+.calendar-day-number { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.calendar-day-tasks { display: flex; flex-direction: column; gap: 2px; }
+.calendar-task-dot { height: 4px; background: linear-gradient(90deg, #ff006e, #8338ec); border-radius: 2px; }
+
+/* ===== СТАТИСТИКА ===== */
+.stats-container {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.stats-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+
+.chart-container {
+  width: 100%;
+  height: 250px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.chart-container canvas { width: 100% !important; height: 100% !important; }
+
+.stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-value { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-label { font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 4px; }
+
+/* ===== БЕГУЩАЯ СТРОКА ===== */
+.marquee-container {
+  position: fixed;
+  bottom: 0; left: 0;
+  width: 100%;
+  background: rgba(10, 15, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(131, 56, 236, 0.3);
+  padding: 12px 0;
+  overflow: hidden;
+  z-index: 99;
+  box-shadow: 0 -4px 20px rgba(131, 56, 236, 0.2);
+}
+
+.marquee-content { display: flex; animation: marquee 30s linear infinite; white-space: nowrap; }
+.marquee-content:hover { animation-play-state: paused; }
+
+.marquee-text {
+  display: inline-block;
+  padding: 0 50px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  text-shadow: 0 0 10px rgba(131, 56, 236, 0.5);
+}
+
+.marquee-text span { color: #a78bfa; font-weight: 600; }
+.marquee-star { color: #ff006e; margin: 0 10px; animation: pulse 2s infinite; }
+
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+
+/* ===== СКРОЛЛБАР ===== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(131, 56, 236, 0.5); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(131, 56, 236, 0.8); }
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 768px) {
+  .container { padding: 20px; padding-bottom: 80px; }
+  .page-title { font-size: 32px; }
+  .header { padding: 15px 20px; }
+  nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="cosmos-bg" id="cosmosBg">
+  <div class="nebula nebula-1" data-parallax="0.02"></div>
+  <div class="nebula nebula-2" data-parallax="0.03"></div>
+  <div class="nebula nebula-3" data-parallax="0.015"></div>
+  <div class="shooting-star"></div>
+  <div class="shooting-star"></div>
+  <div class="shooting-star"></div>
+  <div class="shooting-star"></div>
+  <div class="shooting-star"></div>
+</div>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">K</div>
+    <span>Kanban Flow</span>
+  </div>
+  <nav>
+    <button class="nav-btn active" data-page="boards">📋 Доски</button>
+    <button class="nav-btn" data-page="calendar">📅 Календарь</button>
+    <button class="nav-btn" data-page="stats">📊 Статистика</button>
+    <button class="nav-btn" data-page="profile">👤 Профиль</button>
+  </nav>
+  <div class="user-avatar">U</div>
+</header>
+
+<main class="container">
+  <div class="boards-view active" id="boardsView">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Мои доски</h1>
+        <p class="page-subtitle" id="boardsCount">0 досок · 0 задач</p>
+      </div>
+      <button class="btn-primary" id="createBoardBtn">+ Новая доска</button>
+    </div>
+    <div class="boards-grid" id="boardsGrid"></div>
+  </div>
+
+  <div class="board-view" id="boardView">
+    <div class="board-header">
+      <div style="flex: 1;">
+        <input type="text" class="board-title-input" id="boardTitleInput" placeholder="Название доски">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-secondary" id="backToBoardsBtn">← Назад</button>
+        <button class="btn-icon danger" id="deleteBoardBtn" title="Удалить доску">🗑</button>
+      </div>
+    </div>
+    <div class="columns-container" id="columnsContainer"></div>
+  </div>
+
+  <div class="calendar-view" id="calendarView">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Календарь</h1>
+        <p class="page-subtitle">Все задачи с дедлайнами</p>
+      </div>
+    </div>
+    <div class="calendar">
+      <div class="calendar-header">
+        <button class="btn-icon" id="prevMonth">‹</button>
+        <h2 class="calendar-title" id="calendarTitle"></h2>
+        <button class="btn-icon" id="nextMonth">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+
+  <div class="calendar-view" id="statsView">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Статистика</h1>
+        <p class="page-subtitle">Аналитика продуктивности</p>
+      </div>
+    </div>
+    <div class="stats-container">
+      <h3 class="stats-title">Выполнение задач по дням (последние 7 дней)</h3>
+      <div class="chart-container">
+        <canvas id="completionChart"></canvas>
+      </div>
+      <div class="stats-cards" id="statsCards"></div>
+    </div>
+  </div>
+
+  <div class="calendar-view" id="profileView">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Профиль</h1>
+        <p class="page-subtitle">Настройки аккаунта</p>
+      </div>
+    </div>
+    <div class="modal" style="max-width: 600px;">
+      <div class="form-group">
+        <label>Имя</label>
+        <input type="text" id="profileName" placeholder="Ваше имя">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="profileEmail" placeholder="email@example.com">
+      </div>
+      <button class="btn-primary" id="saveProfileBtn">Сохранить</button>
+    </div>
+  </div>
+</main>
+
+<div class="marquee-container">
+  <div class="marquee-content">
+    <div class="marquee-text"><span class="marquee-star">✦</span>Создано с <span>❤</span> и вдохновением космосом<span class="marquee-star">✦</span>Kanban Flow — управляй задачами как профессионал<span class="marquee-star">✦</span>Организованность — ключ к успеху<span class="marquee-star">✦</span>Планируй. Действуй. Достигай.<span class="marquee-star">✦</span></div>
+    <div class="marquee-text"><span class="marquee-star">✦</span>Создано с <span>❤</span> и вдохновением космосом<span class="marquee-star">✦</span>Kanban Flow — управляй задачами как профессионал<span class="marquee-star">✦</span>Организованность — ключ к успеху<span class="marquee-star">✦</span>Планируй. Действуй. Достигай.<span class="marquee-star">✦</span></div>
+  </div>
+</div>
+
+<!-- МОДАЛКА СОЗДАНИЯ ДОСКИ С ШАБЛОНАМИ -->
+<div class="modal-overlay" id="boardModal">
+  <div class="modal">
+    <h2>Новая доска</h2>
+    <div class="form-group">
+      <label>Выберите шаблон (опционально)</label>
+      <div class="templates-grid" id="templatesGrid">
+        <div class="template-card" data-template="empty">
+          <div class="template-icon">📋</div>
+          <div class="template-name">Пустая</div>
+          <div class="template-desc">Без предустановок</div>
+        </div>
+        <div class="template-card" data-template="dev">
+          <div class="template-icon">💻</div>
+          <div class="template-name">Разработка</div>
+          <div class="template-desc">Backlog, Sprint, Done</div>
+        </div>
+        <div class="template-card" data-template="marketing">
+          <div class="template-icon">📣</div>
+          <div class="template-name">Маркетинг</div>
+          <div class="template-desc">Идеи, В работе, Запуск</div>
+        </div>
+        <div class="template-card" data-template="personal">
+          <div class="template-icon">🎯</div>
+          <div class="template-name">Личные цели</div>
+          <div class="template-desc">Планы, Делаю, Готово</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="newBoardTitle" placeholder="Например: Проект X">
+    </div>
+    <div class="form-group">
+      <label>Описание</label>
+      <textarea id="newBoardDesc" placeholder="Краткое описание..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelBoardBtn">Отмена</button>
+      <button class="btn-primary" id="saveBoardBtn">Создать</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА КАРТОЧКИ -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <h2 id="cardModalTitle">Новая карточка</h2>
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="cardTitle" placeholder="Заголовок задачи">
+    </div>
+    <div class="form-group">
+      <label>Описание</label>
+      <textarea id="cardDesc" placeholder="Подробности..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Метки</label>
+      <div class="tags-selector" id="tagsSelector">
+        <div class="tag-option tag-option-bug" data-tag="bug">🐛 Баг</div>
+        <div class="tag-option tag-option-feature" data-tag="feature">✨ Фича</div>
+        <div class="tag-option tag-option-improvement" data-tag="improvement">⚡ Улучшение</div>
+        <div class="tag-option tag-option-design" data-tag="design">🎨 Дизайн</div>
+        <div class="tag-option tag-option-urgent" data-tag="urgent">🔥 Срочно</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Исполнитель</label>
+      <input type="text" id="cardAssignee" placeholder="Кто выполняет">
+    </div>
+    <div class="form-group">
+      <label>Дедлайн</label>
+      <input type="date" id="cardDeadline">
+    </div>
+    <div class="form-group">
+      <label>Изображение</label>
+      <input type="file" id="cardImage" accept="image/*">
+      <img id="cardImagePreview" style="max-width: 100%; margin-top: 10px; border-radius: 8px; display: none;">
+    </div>
+    <div class="form-group">
+      <label>Файлы (до 500 КБ каждый)</label>
+      <input type="file" id="cardFiles" multiple>
+      <div id="filesList" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-icon danger" id="deleteCardBtn" style="margin-right: auto;">🗑</button>
+      <button class="btn-secondary" id="cancelCardBtn">Отмена</button>
+      <button class="btn-primary" id="saveCardBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== ГЕНЕРАЦИЯ ЗВЁЗД =====
+function createStars() {
+  const cosmosBg = document.getElementById('cosmosBg');
+  const starCount = 200;
+  for (let i = 0; i < starCount; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    const duration = Math.random() * 3 + 2;
+    const delay = Math.random() * 5;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.left = x + '%';
+    star.style.top = y + '%';
+    star.style.setProperty('--duration', duration + 's');
+    star.style.setProperty('--delay', delay + 's');
+    star.dataset.parallax = (Math.random() * 0.03 + 0.01).toFixed(3);
+    if (Math.random() > 0.85) {
+      const colors = ['#a78bfa', '#60a5fa', '#f472b6', '#fbbf24'];
+      star.style.background = colors[Math.floor(Math.random() * colors.length)];
+      star.style.boxShadow = `0 0 ${size * 2}px ${star.style.background}`;
+    }
+    cosmosBg.appendChild(star);
+  }
+}
+createStars();
+
+// ===== ПАРАЛЛАКС =====
+document.addEventListener('mousemove', (e) => {
+  const x = (e.clientX / window.innerWidth - 0.5) * 2;
+  const y = (e.clientY / window.innerHeight - 0.5) * 2;
+  
+  document.querySelectorAll('[data-parallax]').forEach(el => {
+    const factor = parseFloat(el.dataset.parallax);
+    const moveX = x * factor * 100;
+    const moveY = y * factor * 100;
+    el.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  });
+});
+
+// ===== ЗВУКОВЫЕ ЭФФЕКТЫ =====
+let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) { return null; }
+  }
+  return audioCtx;
+}
+
+function playSound(type) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(ctx.destination);
+  
+  const now = ctx.currentTime;
+  
+  switch(type) {
+    case 'click':
+      oscillator.frequency.setValueAtTime(800, now);
+      oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      oscillator.start(now);
+      oscillator.stop(now + 0.1);
+      break;
+    case 'success':
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(523, now);
+      oscillator.frequency.setValueAtTime(659, now + 0.1);
+      oscillator.frequency.setValueAtTime(784, now + 0.2);
+      gainNode.gain.setValueAtTime(0.15, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      oscillator.start(now);
+      oscillator.stop(now + 0.4);
+      break;
+    case 'delete':
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(300, now);
+      oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      oscillator.start(now);
+      oscillator.stop(now + 0.2);
+      break;
+    case 'drop':
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(600, now);
+      oscillator.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+      gainNode.gain.setValueAtTime(0.12, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      oscillator.start(now);
+      oscillator.stop(now + 0.15);
+      break;
+  }
+}
+
+// ===== ДАННЫЕ =====
+const STORAGE_KEY = 'kanbanFlowData';
+let appData = { boards: [], profile: {} };
+let currentBoardId = null;
+let currentColumnId = null;
+let currentCardId = null;
+let currentCalendarDate = new Date();
+let selectedTemplate = 'empty';
+let selectedTags = [];
+let tempFiles = [];
+
+// ===== ШАБЛОНЫ =====
+const TEMPLATES = {
+  empty: { columns: [
+    { id: 'col-1', title: 'To Do', cards: [] },
+    { id: 'col-2', title: 'In Progress', cards: [] },
+    { id: 'col-3', title: 'Done', cards: [] }
+  ]},
+  dev: { columns: [
+    { id: 'col-1', title: 'Backlog', cards: [] },
+    { id: 'col-2', title: 'Sprint', cards: [] },
+    { id: 'col-3', title: 'В работе', cards: [] },
+    { id: 'col-4', title: 'Тестирование', cards: [] },
+    { id: 'col-5', title: 'Готово', cards: [] }
+  ]},
+  marketing: { columns: [
+    { id: 'col-1', title: 'Идеи', cards: [] },
+    { id: 'col-2', title: 'Планирование', cards: [] },
+    { id: 'col-3', title: 'В работе', cards: [] },
+    { id: 'col-4', title: 'Запуск', cards: [] },
+    { id: 'col-5', title: 'Анализ', cards: [] }
+  ]},
+  personal: { columns: [
+    { id: 'col-1', title: 'Планы', cards: [] },
+    { id: 'col-2', title: 'Делаю', cards: [] },
+    { id: 'col-3', title: 'Готово', cards: [] }
+  ]}
+};
+
+// ===== ЗАГРУЗКА/СОХРАНЕНИЕ =====
+function loadData() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try { appData = JSON.parse(stored); } catch(e) { appData = { boards: [], profile: {} }; }
+  } else { appData = { boards: [], profile: {} }; }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+  } catch(e) {
+    alert('Хранилище переполнено! Удалите старые файлы из карточек.');
+  }
+}
+
+function generateId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+
+// ===== НАВИГАЦИЯ =====
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    playSound('click');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const page = btn.dataset.page;
+    document.querySelectorAll('.boards-view, .board-view, .calendar-view').forEach(v => v.classList.remove('active'));
+    if (page === 'boards') { document.getElementById('boardsView').classList.add('active'); renderBoards(); }
+    else if (page === 'calendar') { document.getElementById('calendarView').classList.add('active'); renderCalendar(); }
+    else if (page === 'stats') { document.getElementById('statsView').classList.add('active'); renderStats(); }
+    else if (page === 'profile') { document.getElementById('profileView').classList.add('active'); loadProfile(); }
+  });
+});
+
+// ===== РЕНДЕР ДОСОК =====
+function renderBoards() {
+  const grid = document.getElementById('boardsGrid');
+  grid.innerHTML = '';
+  let totalTasks = 0;
+  appData.boards.forEach(board => {
+    const tasks = board.columns.reduce((sum, col) => sum + col.cards.length, 0);
+    totalTasks += tasks;
+    const card = document.createElement('div');
+    card.className = 'board-card';
+    card.innerHTML = `
+      <h3>${escapeHtml(board.title)}</h3>
+      <p>${escapeHtml(board.description || 'Без описания')}</p>
+      <div class="board-meta">
+        <div class="board-stats">
+          <span class="stat">📊 ${board.columns.length} кол.</span>
+          <span class="stat">✓ ${tasks} задач</span>
+        </div>
+        <span>${new Date(board.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'})}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => { playSound('click'); openBoard(board.id); });
+    grid.appendChild(card);
+  });
+  const addCard = document.createElement('div');
+  addCard.className = 'add-board-card';
+  addCard.innerHTML = '+ Создать доску';
+  addCard.addEventListener('click', () => { playSound('click'); openBoardModal(); });
+  grid.appendChild(addCard);
+  document.getElementById('boardsCount').textContent = `${appData.boards.length} досок · ${totalTasks} задач`;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ===== ШАБЛОНЫ =====
+document.querySelectorAll('.template-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedTemplate = card.dataset.template;
+    playSound('click');
+  });
+});
+
+// ===== МОДАЛКА ДОСКИ =====
+function openBoardModal() {
+  document.getElementById('boardModal').classList.add('active');
+  document.getElementById('newBoardTitle').value = '';
+  document.getElementById('newBoardDesc').value = '';
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector('[data-template="empty"]').classList.add('selected');
+  selectedTemplate = 'empty';
+  document.getElementById('newBoardTitle').focus();
+}
+
+document.getElementById('cancelBoardBtn').addEventListener('click', () => {
+  document.getElementById('boardModal').classList.remove('active');
+  playSound('click');
+});
+
+document.getElementById('saveBoardBtn').addEventListener('click', () => {
+  const title = document.getElementById('newBoardTitle').value.trim();
+  if (!title) { alert('Введите название доски'); return; }
+  const template = TEMPLATES[selectedTemplate];
+  const board = {
+    id: generateId(),
+    title: title,
+    description: document.getElementById('newBoardDesc').value.trim(),
+    createdAt: new Date().toISOString(),
+    columns: template.columns.map(col => ({ ...col, id: generateId(), cards: [] }))
+  };
+  appData.boards.push(board);
+  saveData();
+  document.getElementById('boardModal').classList.remove('active');
+  playSound('success');
+  renderBoards();
+});
+
+document.getElementById('createBoardBtn').addEventListener('click', openBoardModal);
+
+// ===== ОТКРЫТЬ ДОСКУ =====
+function openBoard(boardId) {
+  currentBoardId = boardId;
+  document.querySelectorAll('.boards-view, .board-view, .calendar-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('boardView').classList.add('active');
+  const board = appData.boards.find(b => b.id === boardId);
+  if (!board) return;
+  document.getElementById('boardTitleInput').value = board.title;
+  renderColumns();
+}
+
+document.getElementById('backToBoardsBtn').addEventListener('click', () => {
+  document.querySelectorAll('.boards-view, .board-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('boardsView').classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-page="boards"]').classList.add('active');
+  renderBoards();
+  playSound('click');
+});
+
+document.getElementById('boardTitleInput').addEventListener('input', (e) => {
+  const board = appData.boards.find(b => b.id === currentBoardId);
+  if (board) { board.title = e.target.value; saveData(); }
+});
+
+document.getElementById('deleteBoardBtn').addEventListener('click', () => {
+  if (confirm('Удалить эту доску?')) {
+    appData.boards = appData.boards.filter(b => b.id !== currentBoardId);
+    saveData();
+    playSound('delete');
+    document.getElementById('backToBoardsBtn').click();
+  }
+});
+
+// ===== РЕНДЕР КОЛОНОК =====
+function renderColumns() {
+  const container = document.getElementById('columnsContainer');
+  container.innerHTML = '';
+  const board = appData.boards.find(b => b.id === currentBoardId);
+  if (!board) return;
+  board.columns.forEach(column => {
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.columnId = column.id;
+    const cardsList = document.createElement('div');
+    cardsList.className = 'cards-list';
+    cardsList.dataset.columnId = column.id;
+    cardsList.addEventListener('dragover', handleDragOver);
+    cardsList.addEventListener('dragenter', handleDragEnter);
+    cardsList.addEventListener('dragleave', handleDragLeave);
+    cardsList.addEventListener('drop', handleDrop);
+    column.cards.forEach(card => { cardsList.appendChild(createCardElement(card, column.id)); });
+    colEl.innerHTML = `
+      <div class="column-header">
+        <input type="text" class="column-title" value="${escapeHtml(column.title)}">
+        <span class="cards-count">${column.cards.length}</span>
+        <button class="btn-icon danger" data-delete-col="${column.id}">×</button>
+      </div>
+    `;
+    colEl.appendChild(cardsList);
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-card-btn';
+    addBtn.textContent = '+ Добавить карточку';
+    addBtn.addEventListener('click', () => { playSound('click'); openCardModal(column.id); });
+    colEl.appendChild(addBtn);
+    colEl.querySelector('.column-title').addEventListener('input', (e) => { column.title = e.target.value; saveData(); });
+    colEl.querySelector('[data-delete-col]').addEventListener('click', () => {
+      if (confirm('Удалить колонку и все её карточки?')) {
+        board.columns = board.columns.filter(c => c.id !== column.id);
+        saveData();
+        playSound('delete');
+        renderColumns();
+      }
+    });
+    container.appendChild(colEl);
+  });
+  const addColBtn = document.createElement('div');
+  addColBtn.className = 'add-column-btn';
+  addColBtn.textContent = '+ Добавить колонку';
+  addColBtn.addEventListener('click', () => {
+    const title = prompt('Название колонки:');
+    if (title && title.trim()) {
+      board.columns.push({ id: generateId(), title: title.trim(), cards: [] });
+      saveData();
+      playSound('success');
+      renderColumns();
+    }
+  });
+  container.appendChild(addColBtn);
+}
+
+// ===== КАРТОЧКА =====
+function createCardElement(card, columnId) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.draggable = true;
+  el.dataset.cardId = card.id;
+  el.dataset.columnId = columnId;
+  let imageHtml = card.image ? `<img src="${card.image}" class="card-image">` : '';
+  let tagsHtml = '';
+  if (card.tags && card.tags.length > 0) {
+    const tagNames = { bug: '🐛 Баг', feature: '✨ Фича', improvement: '⚡ Улучш.', design: '🎨 Дизайн', urgent: '🔥 Срочно' };
+    tagsHtml = '<div class="card-tags">' + card.tags.map(t => `<span class="tag tag-${t}">${tagNames[t] || t}</span>`).join('') + '</div>';
+  }
+  let deadlineHtml = '';
+  if (card.deadline) {
+    const isOverdue = new Date(card.deadline) < new Date();
+    deadlineHtml = `<span class="card-deadline ${isOverdue ? 'overdue' : ''}">📅 ${new Date(card.deadline).toLocaleDateString('ru-RU')}</span>`;
+  }
+  let attachmentsHtml = '';
+  if (card.files && card.files.length > 0) {
+    attachmentsHtml = '<div class="card-attachments">' + card.files.map((f, i) => `<span class="attachment" data-file-idx="${i}" title="${escapeHtml(f.name)}">📎 ${escapeHtml(f.name)}</span>`).join('') + '</div>';
+  }
+  el.innerHTML = `
+    ${imageHtml}
+    <div class="card-title">${escapeHtml(card.title)}</div>
+    ${tagsHtml}
+    ${card.description ? `<div class="card-description">${escapeHtml(card.description)}</div>` : ''}
+    ${attachmentsHtml}
+    <div class="card-footer">
+      ${card.assignee ? `<span>👤 ${escapeHtml(card.assignee)}</span>` : '<span></span>'}
+      ${deadlineHtml}
+    </div>
+  `;
+  el.addEventListener('click', (e) => {
+    if (e.target.classList.contains('attachment')) {
+      const idx = parseInt(e.target.dataset.fileIdx);
+      const file = card.files[idx];
+      const a = document.createElement('a');
+      a.href = file.data;
+      a.download = file.name;
+      a.click();
+      e.stopPropagation();
+      return;
+    }
+    openCardModal(columnId, card.id);
+  });
+  el.addEventListener('dragstart', handleDragStart);
+  el.addEventListener('dragend', handleDragEnd);
+  return el;
+}
+
+// ===== DRAG AND DROP =====
+let draggedCard = null;
+let draggedFromColumn = null;
+
+function handleDragStart(e) {
+  draggedCard = this.dataset.cardId;
+  draggedFromColumn = this.dataset.columnId;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.cards-list').forEach(l => l.classList.remove('drag-over'));
+}
+
+function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function handleDragEnter(e) { e.preventDefault(); this.classList.add('drag-over'); }
+function handleDragLeave(e) { this.classList.remove('drag-over'); }
+
+function handleDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  const targetColumnId = this.dataset.columnId;
+  if (!draggedCard || !draggedFromColumn || targetColumnId === draggedFromColumn) return;
+  const board = appData.boards.find(b => b.id === currentBoardId);
+  const fromCol = board.columns.find(c => c.id === draggedFromColumn);
+  const toCol = board.columns.find(c => c.id === targetColumnId);
+  const cardIndex = fromCol.cards.findIndex(c => c.id === draggedCard);
+  if (cardIndex > -1) {
+    const [card] = fromCol.cards.splice(cardIndex, 1);
+    toCol.cards.push(card);
+    saveData();
+    playSound('drop');
+    renderColumns();
+  }
+  draggedCard = null;
+  draggedFromColumn = null;
+}
+
+// ===== МОДАЛКА КАРТОЧКИ =====
+function openCardModal(columnId, cardId = null) {
+  currentColumnId = columnId;
+  currentCardId = cardId;
+  selectedTags = [];
+  tempFiles = [];
+  document.getElementById('cardModal').classList.add('active');
+  document.getElementById('cardModalTitle').textContent = cardId ? 'Редактировать карточку' : 'Новая карточка';
+  document.getElementById('deleteCardBtn').style.display = cardId ? 'flex' : 'none';
+  document.querySelectorAll('.tag-option').forEach(t => t.classList.remove('selected'));
+  document.getElementById('filesList').innerHTML = '';
+  
+  if (cardId) {
+    const board = appData.boards.find(b => b.id === currentBoardId);
+    const col = board.columns.find(c => c.id === columnId);
+    const card = col.cards.find(c => c.id === cardId);
+    document.getElementById('cardTitle').value = card.title;
+    document.getElementById('cardDesc').value = card.description || '';
+    document.getElementById('cardAssignee').value = card.assignee || '';
+    document.getElementById('cardDeadline').value = card.deadline || '';
+    const preview = document.getElementById('cardImagePreview');
+    if (card.image) { preview.src = card.image; preview.style.display = 'block'; }
+    else { preview.style.display = 'none'; }
+    if (card.tags) {
+      selectedTags = [...card.tags];
+      selectedTags.forEach(t => {
+        const el = document.querySelector(`.tag-option[data-tag="${t}"]`);
+        if (el) el.classList.add('selected');
+      });
+    }
+    if (card.files) {
+      tempFiles = [...card.files];
+      renderTempFiles();
+    }
+  } else {
+    document.getElementById('cardTitle').value = '';
+    document.getElementById('cardDesc').value = '';
+    document.getElementById('cardAssignee').value = '';
+    document.getElementById('cardDeadline').value = '';
+    document.getElementById('cardImage').value = '';
+    document.getElementById('cardFiles').value = '';
+    document.getElementById('cardImagePreview').style.display = 'none';
+  }
+}
+
+// Выбор меток
+document.querySelectorAll('.tag-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    opt.classList.toggle('selected');
+    const tag = opt.dataset.tag;
+    if (selectedTags.includes(tag)) selectedTags = selectedTags.filter(t => t !== tag);
+    else selectedTags.push(tag);
+    playSound('click');
+  });
+});
+
+// Предпросмотр изображения
+document.getElementById('cardImage').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const preview = document.getElementById('cardImagePreview');
+      preview.src = event.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// Загрузка файлов
+document.getElementById('cardFiles').addEventListener('change', (e) => {
+  Array.from(e.target.files).forEach(file => {
+    if (file.size > 500 * 1024) {
+      alert(`Файл "${file.name}" слишком большой (макс. 500 КБ)`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      tempFiles.push({ name: file.name, data: event.target.result, size: file.size });
+      renderTempFiles();
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+function renderTempFiles() {
+  const list = document.getElementById('filesList');
+  list.innerHTML = tempFiles.map((f, i) => 
+    `<span class="attachment" onclick="removeTempFile(${i})">📎 ${escapeHtml(f.name)} ✕</span>`
+  ).join('');
+}
+
+window.removeTempFile = function(idx) {
+  tempFiles.splice(idx, 1);
+  renderTempFiles();
+  playSound('click');
+};
+
+document.getElementById('cancelCardBtn').addEventListener('click', () => {
+  document.getElementById('cardModal').classList.remove('active');
+  playSound('click');
+});
+
+document.getElementById('saveCardBtn').addEventListener('click', () => {
+  const title = document.getElementById('cardTitle').value.trim();
+  if (!title) { alert('Введите название карточки'); return; }
+  const board = appData.boards.find(b => b.id === currentBoardId);
+  const col = board.columns.find(c => c.id === currentColumnId);
+  const preview = document.getElementById('cardImagePreview');
+  const cardData = {
+    title: title,
+    description: document.getElementById('cardDesc').value.trim(),
+    assignee: document.getElementById('cardAssignee').value.trim(),
+    deadline: document.getElementById('cardDeadline').value || null,
+    tags: [...selectedTags],
+    image: preview.style.display !== 'none' ? preview.src : null,
+    files: [...tempFiles]
+  };
+  if (currentCardId) {
+    const card = col.cards.find(c => c.id === currentCardId);
+    Object.assign(card, cardData);
+  } else {
+    col.cards.push({ id: generateId(), ...cardData });
+  }
+  saveData();
+  document.getElementById('cardModal').classList.remove('active');
+  playSound('success');
+  renderColumns();
+});
+
+document.getElementById('deleteCardBtn').addEventListener('click', () => {
+  if (confirm('Удалить карточку?')) {
+    const board = appData.boards.find(b => b.id === currentBoardId);
+    const col = board.columns.find(c => c.id === currentColumnId);
+    col.cards = col.cards.filter(c => c.id !== currentCardId);
+    saveData();
+    document.getElementById('cardModal').classList.remove('active');
+    playSound('delete');
+    renderColumns();
+  }
+});
+
+// ===== КАЛЕНДАРЬ =====
+function renderCalendar() {
+  const year = currentCalendarDate.getFullYear();
+  const month = currentCalendarDate.getMonth();
+  const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  const dayHeaders = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  dayHeaders.forEach(d => { const el = document.createElement('div'); el.className = 'calendar-day-header'; el.textContent = d; grid.appendChild(el); });
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDay = (firstDay.getDay() + 6) % 7;
+  const tasksByDate = {};
+  appData.boards.forEach(board => {
+    board.columns.forEach(col => {
+      col.cards.forEach(card => {
+        if (card.deadline) {
+          if (!tasksByDate[card.deadline]) tasksByDate[card.deadline] = 0;
+          tasksByDate[card.deadline]++;
+        }
+      });
+    });
+  });
+  const today = new Date().toISOString().split('T')[0];
+  for (let i = 0; i < startDay; i++) { const el = document.createElement('div'); el.className = 'calendar-day other-month'; grid.appendChild(el); }
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const el = document.createElement('div');
+    el.className = 'calendar-day';
+    if (dateStr === today) el.classList.add('today');
+    const taskCount = tasksByDate[dateStr] || 0;
+    el.innerHTML = `<div class="calendar-day-number">${day}</div><div class="calendar-day-tasks">${Array(Math.min(taskCount, 3)).fill('<div class="calendar-task-dot"></div>').join('')}</div>`;
+    if (taskCount > 0) el.title = `${taskCount} задач на эту дату`;
+    grid.appendChild(el);
+  }
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(); playSound('click'); });
+document.getElementById('nextMonth').addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(); playSound('click'); });
+
+// ===== СТАТИСТИКА =====
+function renderStats() {
+  const canvas = document.getElementById('completionChart');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2, 2);
+  const width = rect.width;
+  const height = rect.height;
+  ctx.clearRect(0, 0, width, height);
+  
+  // Собираем данные за последние 7 дней
+  const days = [];
+  const counts = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    days.push(d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
+    let count = 0;
+    appData.boards.forEach(board => {
+      board.columns.forEach(col => {
+        col.cards.forEach(card => {
+          if (card.completedAt && card.completedAt.startsWith(dateStr)) count++;
+        });
+      });
+    });
+    counts.push(count);
+  }
+  
+  const max = Math.max(...counts, 1);
+  const padding = 40;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+  const barWidth = chartWidth / days.length * 0.6;
+  const gap = chartWidth / days.length;
+  
+  // Сетка
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (chartHeight / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
+  }
+  
+  // Столбцы
+  days.forEach((day, i) => {
+    const x = padding + gap * i + (gap - barWidth) / 2;
+    const barHeight = (counts[i] / max) * chartHeight;
+    const y = padding + chartHeight - barHeight;
+    
+    const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
+    gradient.addColorStop(0, '#ff006e');
+    gradient.addColorStop(1, '#8338ec');
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barWidth, barHeight, 6);
+    ctx.fill();
+    
+    // Подпись дня
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(day, x + barWidth / 2, height - padding + 20);
+    
+    // Значение
+    if (counts[i] > 0) {
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Inter';
+      ctx.fillText(counts[i], x + barWidth / 2, y - 8);
+    }
+  });
+  
+  // Карточки статистики
+  let totalTasks = 0, completedTasks = 0, overdueTasks = 0;
+  appData.boards.forEach(board => {
+    board.columns.forEach(col => {
+      col.cards.forEach(card => {
+        totalTasks++;
+        if (card.completedAt) completedTasks++;
+        if (card.deadline && new Date(card.deadline) < new Date() && !card.completedAt) overdueTasks++;
+      });
+    });
+  });
+  
+  const statsCards = document.getElementById('statsCards');
+  statsCards.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${totalTasks}</div><div class="stat-label">Всего задач</div></div>
+    <div class="stat-card"><div class="stat-value">${completedTasks}</div><div class="stat-label">Выполнено</div></div>
+    <div class="stat-card"><div class="stat-value">${totalTasks - completedTasks}</div><div class="stat-label">В работе</div></div>
+    <div class="stat-card"><div class="stat-value">${overdueTasks}</div><div class="stat-label">Просрочено</div></div>
+  `;
+}
+
+// ===== ПРОФИЛЬ =====
+function loadProfile() {
+  document.getElementById('profileName').value = appData.profile.name || '';
+  document.getElementById('profileEmail').value = appData.profile.email || '';
+}
+
+document.getElementById('saveProfileBtn').addEventListener('click', () => {
+  appData.profile = {
+    name: document.getElementById('profileName').value.trim(),
+    email: document.getElementById('profileEmail').value.trim()
+  };
+  saveData();
+  playSound('success');
+  alert('Профиль сохранён!');
+});
+
+// ===== ЗАКРЫТИЕ МОДАЛОК =====
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) { overlay.classList.remove('active'); playSound('click'); }
+  });
+});
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+loadData();
+renderBoards();
+</script>
+
+</body>
+</html>
